@@ -3,7 +3,7 @@ import * as AWS from "aws-sdk";
 import * as awslambda from "aws-lambda";
 import {CodePipelineEvent, CodePipelineJob, CodePipelineS3Location} from "./CodePipelineEvent";
 import {CloudFormationChangeSetConfiguration} from "./CloudFormationChangeSetConfiguration";
-import {CreateChangeSetInput, Parameter} from "aws-sdk/clients/cloudformation";
+import {CreateChangeSetInput, Parameter, ListChangeSetsOutput} from "aws-sdk/clients/cloudformation";
 import * as JSZip from "jszip";
 import {CloudFormationCreateChangeSetS3Input} from "./CloudFormationCreateChangeSetS3Input";
 import {Credentials} from "aws-sdk/clients/sts"
@@ -38,7 +38,7 @@ async function handlerAsync(event: CodePipelineEvent, context: awslambda.Context
 
         const stsResult = await sts.assumeRole({
             RoleArn: createChangeSetInput.RoleArn,
-            RoleSessionName: `Codepipeline-CloudFormation-CreateChangeSet-S3`
+            RoleSessionName: `Codepipeline-CloudFormation-ChangeSetReplace-S3`
         }).promise();
         const credentials: Credentials = stsResult.Credentials;
         const cloudformation = new AWS.CloudFormation({
@@ -47,13 +47,25 @@ async function handlerAsync(event: CodePipelineEvent, context: awslambda.Context
             sessionToken: credentials.SessionToken
         });
 
+        const changeSetOutput: ListChangeSetsOutput = await cloudformation.listChangeSets({
+            StackName: createChangeSetInput.Configuration.StackName
+        }).promise();
+
+        const matchingChangeSet = changeSetOutput.Summaries.find(summary => summary.ChangeSetName == createChangeSetInput.Configuration.ChangeSetName);
+        if (matchingChangeSet) {
+            await cloudformation.deleteChangeSet({
+                StackName: createChangeSetInput.Configuration.StackName,
+                ChangeSetName: createChangeSetInput.Configuration.ChangeSetName
+            }).promise()
+        }
+
         await cloudformation.createChangeSet(createChangeSetInput.Configuration).promise();
         await codepipeline.putJobSuccessResult({
             jobId: job.id
         }).promise();
     }
     catch (err) {
-        console.error("An Error occurred running CreateChangeSet S3",err);
+        console.error("An Error occurred running ChangeSetReplace S3",err);
         await codepipeline.putJobFailureResult({
             jobId: job.id,
             failureDetails: {

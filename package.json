@@ -1,7 +1,7 @@
 {
-  "name": "codepipeline-cloudformation-create-change-set-s3",
+  "name": "codepipeline-cloudformation-change-set-replace-s3",
   "version": "0.1.0",
-  "description": "CodePipeline Custom Action to Create a CloudFormation ChangeSet using S3.",
+  "description": "CodePipeline Custom Action to perform a CloudFormation ChangeSet Replace using S3.",
   "scripts": {
     "build": "webpack",
     "clean": "rimraf ./dist",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Giftbit/codepipeline-cloudformation-create-change-set-s3"
+    "url": "https://github.com/Giftbit/codepipeline-cloudformation-change-set-replace-s3"
   },
   "keywords": [],
   "author": "Jamie Starke",
@@ -22,7 +22,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Giftbit/codepipeline-cloudformation-create-change-set-s3/issues"
+    "url": "https://github.com/Giftbit/codepipeline-cloudformation-change-set-replace-s3/issues"
   },
   "homepage": "",
   "devDependencies": {
