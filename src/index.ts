@@ -47,16 +47,15 @@ async function handlerAsync(event: CodePipelineEvent, context: awslambda.Context
             sessionToken: credentials.SessionToken
         });
 
-        let changeSetOutput = null;
+        let changeSetOutput: ListChangeSetsOutput = {
+            Summaries: []
+        };
         try {
-            changeSetOutput: ListChangeSetsOutput = await cloudformation.listChangeSets({
+            changeSetOutput = await cloudformation.listChangeSets({
                 StackName: createChangeSetInput.Configuration.StackName
             }).promise();
         } catch (err) {
             console.error("An error occurred while listing the change set. Assuming that the stack doesn't exist",err);
-            changeSetOutput: ListChangeSetsOutput = {
-                Summaries: []
-            };
         }
 
         const matchingChangeSet = changeSetOutput.Summaries.find(summary => summary.ChangeSetName == createChangeSetInput.Configuration.ChangeSetName);
