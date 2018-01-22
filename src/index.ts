@@ -56,6 +56,7 @@ async function handlerAsync(event: CodePipelineEvent, context: awslambda.Context
             }).promise();
         } catch (err) {
             console.error("An error occurred while listing the change set. Assuming that the stack doesn't exist",err);
+            createChangeSetInput.Configuration.ChangeSetType = "CREATE";
         }
 
         const matchingChangeSet = changeSetOutput.Summaries.find(summary => summary.ChangeSetName == createChangeSetInput.Configuration.ChangeSetName);
