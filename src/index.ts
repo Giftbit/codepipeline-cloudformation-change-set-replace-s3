@@ -1,12 +1,10 @@
-import "babel-polyfill";
 import * as AWS from "aws-sdk";
 import * as awslambda from "aws-lambda";
 import {CodePipelineEvent, CodePipelineJob, CodePipelineS3Location} from "./CodePipelineEvent";
-import {CloudFormationChangeSetConfiguration} from "./CloudFormationChangeSetConfiguration";
-import {CreateChangeSetInput, Parameter, ListChangeSetsOutput} from "aws-sdk/clients/cloudformation";
+import {ListChangeSetsOutput} from "aws-sdk/clients/cloudformation";
 import * as JSZip from "jszip";
 import {CloudFormationCreateChangeSetS3Input} from "./CloudFormationCreateChangeSetS3Input";
-import {Credentials} from "aws-sdk/clients/sts"
+import {Credentials} from "aws-sdk/clients/sts";
 
 export const codepipeline = new AWS.CodePipeline();
 export const s3 = new AWS.S3();
@@ -31,7 +29,7 @@ async function handlerAsync(event: CodePipelineEvent, context: awslambda.Context
 
     try {
         const createChangeSetInput = getCloudformationCreateChangeSetFromJob(job);
-        debug && console.log("ChangeSet Input",JSON.stringify(createChangeSetInput));
+        debug && console.log("ChangeSet Input", JSON.stringify(createChangeSetInput));
 
         createChangeSetInput.Configuration.TemplateURL = await resolveObjectKey(createChangeSetInput.Configuration.TemplateURL, job);
         debug && console.log("Configuration.TemplateURL", createChangeSetInput.Configuration.TemplateURL);
@@ -55,16 +53,16 @@ async function handlerAsync(event: CodePipelineEvent, context: awslambda.Context
                 StackName: createChangeSetInput.Configuration.StackName
             }).promise();
         } catch (err) {
-            console.error("An error occurred while listing the change set. Assuming that the stack doesn't exist",err);
+            console.error("An error occurred while listing the change set. Assuming that the stack doesn't exist", err);
             createChangeSetInput.Configuration.ChangeSetType = "CREATE";
         }
 
-        const matchingChangeSet = changeSetOutput.Summaries.find(summary => summary.ChangeSetName == createChangeSetInput.Configuration.ChangeSetName);
+        const matchingChangeSet = changeSetOutput.Summaries.find(summary => summary.ChangeSetName === createChangeSetInput.Configuration.ChangeSetName);
         if (matchingChangeSet) {
             await cloudformation.deleteChangeSet({
                 StackName: createChangeSetInput.Configuration.StackName,
                 ChangeSetName: createChangeSetInput.Configuration.ChangeSetName
-            }).promise()
+            }).promise();
         }
 
         await cloudformation.createChangeSet(createChangeSetInput.Configuration).promise();
@@ -73,7 +71,7 @@ async function handlerAsync(event: CodePipelineEvent, context: awslambda.Context
         }).promise();
     }
     catch (err) {
-        console.error("An Error occurred running ChangeSetReplace S3",err);
+        console.error("An Error occurred running ChangeSetReplace S3", err);
         await codepipeline.putJobFailureResult({
             jobId: job.id,
             failureDetails: {
@@ -91,7 +89,7 @@ export function getCloudformationCreateChangeSetFromJob(job: CodePipelineJob): C
     const configuration = input.Configuration;
     const parameterOverrides = configuration.ParameterOverrides;
 
-    debug && console.log("parameterOverrrides",parameterOverrides);
+    debug && console.log("parameterOverrrides", parameterOverrides);
 
     configuration.Parameters = [];
     if (parameterOverrides) {
@@ -109,7 +107,7 @@ export function getCloudformationCreateChangeSetFromJob(job: CodePipelineJob): C
     for (let env in process.env) {
         if (env.startsWith("Param_")) {
             configuration.Parameters.push({
-                ParameterKey: env.replace("Param_",""),
+                ParameterKey: env.replace("Param_", ""),
                 ParameterValue: process.env[env]
             });
         }
@@ -118,13 +116,13 @@ export function getCloudformationCreateChangeSetFromJob(job: CodePipelineJob): C
     return input;
 }
 
-export function getS3LocationForInputArtifact(artifactName: string, job:CodePipelineJob): CodePipelineS3Location {
-    const artifact = job.data.inputArtifacts.find((artifact) => artifact.name == artifactName);
+export function getS3LocationForInputArtifact(artifactName: string, job: CodePipelineJob): CodePipelineS3Location {
+    const artifact = job.data.inputArtifacts.find((artifact) => artifact.name === artifactName);
 
-    debug && console.log("artifactName",artifactName,"artifact",artifact);
+    debug && console.log("artifactName", artifactName, "artifact", artifact);
 
     if (artifact) {
-        return artifact.location.s3Location
+        return artifact.location.s3Location;
     }
     return null;
 }
@@ -148,10 +146,10 @@ export async function resolveObjectKey(objectKey: string, job: CodePipelineJob):
         }
 
         if (!jsonKey) {
-            return fileBody.toString('utf-8');
+            return fileBody.toString("utf-8");
         }
 
-        const fileJson = JSON.parse(fileBody.toString('utf-8'));
+        const fileJson = JSON.parse(fileBody.toString("utf-8"));
         const value = fileJson[jsonKey];
 
         if (!value) {
@@ -178,8 +176,8 @@ export async function getBodyFromZippedS3Object(bucketName: string, key: string,
     const file = zip.file(filename);
 
     if (!file) {
-        throw new Error(`Unable to get file from artifact object. File '${filename}' was not found.`)
+        throw new Error(`Unable to get file from artifact object. File '${filename}' was not found.`);
     }
 
-    return await file.async('nodebuffer');
+    return await file.async("nodebuffer");
 }
