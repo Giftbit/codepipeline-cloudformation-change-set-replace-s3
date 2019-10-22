@@ -13,18 +13,8 @@ export const sts = new AWS.STS();
 const debug = process.env["DEBUG"];
 
 //noinspection JSUnusedGlobalSymbols
-export function handler(event: CodePipelineEvent, context: awslambda.Context, callback: awslambda.Callback): void {
+async function handler(event: CodePipelineEvent, context: awslambda.Context): Promise<void> {
     console.log("event", JSON.stringify(event, null, 2));
-    handlerAsync(event, context)
-        .then(res => {
-            callback(undefined, res);
-        }, err => {
-            console.error(JSON.stringify(err, null, 2));
-            callback(err);
-        });
-}
-
-async function handlerAsync(event: CodePipelineEvent, context: awslambda.Context): Promise<void> {
     const job: CodePipelineJob = event["CodePipeline.job"];
 
     try {
