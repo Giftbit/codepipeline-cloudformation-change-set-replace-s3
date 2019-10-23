@@ -63,7 +63,7 @@ module.exports = {
         new ZipPlugin({
             path: path.join(__dirname, 'dist'),
             pathPrefix: "",
-            filename: `dist.zip`
+            filename: `codepipeline-cloudformation-change-set-replace-s3-action.zip`
         })
     ],
     target: 'node',
